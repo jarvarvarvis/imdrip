@@ -1,7 +1,7 @@
 extern crate glfw;
 
 use glfw::fail_on_errors;
-use glfw::{Action, Context, Key};
+use glfw::Context;
 
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors!()).unwrap();
