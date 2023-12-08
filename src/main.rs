@@ -4,8 +4,6 @@ extern crate glfw;
 mod draw;
 mod opengl;
 
-use std::path::Path;
-
 use glfw::Context;
 use nalgebra::Vector2;
 
@@ -72,53 +70,17 @@ fn main() {
                     }
 
                     window.set_size(size.x, size.y);
-                    println!("Reized window to {}, {} to fit image", size.x, size.y);
+                    println!("Resized window to {}, {} to fit image", size.x, size.y);
                 }
                 glfw::WindowEvent::FileDrop(paths) => {
                     for path in paths.iter() {
-                        // Read the texture (if it's a file path)
-                        let exists_result = Path::try_exists(&path);
-                        let exists = exists_result.map(|exists| exists).unwrap_or(false);
-                        if exists {
-                            drawing_ctx.update_texture_from_path(&path);
+                        drawing_ctx.handle_file_path(path);
 
-                            // Resize (if resize-on-load is enabled)
-                            if drawing_ctx.resize_on_load() {
-                                let size = drawing_ctx.image_size();
-                                window.set_size(size.x, size.y);
-                            }
-                        } else {
-                            println!("File doesn't exist, trying to download from the internet");
+                        // Resize (if resize-on-load is enabled)
+                        if drawing_ctx.resize_on_load() {
+                            let size = drawing_ctx.image_size();
+                            window.set_size(size.x, size.y);
                         }
-
-                        // Download the texture from a URL (if it is one) and update the drawing ctx
-                        let downloaded_image =
-                            reqwest::blocking::get(path.to_string_lossy().as_ref());
-                        if let Err(error) = downloaded_image {
-                            println!("Failed to download image from URL: {}", error);
-                            continue;
-                        }
-
-                        let response = downloaded_image.unwrap();
-                        let bytes = response.bytes();
-                        if let Err(error) = bytes {
-                            println!("Failed to get full response body as bytes: {}", error);
-                            continue;
-                        }
-
-                        let received_bytes = bytes.unwrap();
-                        println!("Received {} bytes", received_bytes.len());
-
-                        let image = image::load_from_memory(&received_bytes);
-                        if let Err(error) = image {
-                            println!("Failed to create image from response: {}", error);
-                            continue;
-                        }
-
-                        println!("Done loading image from URL!");
-                        let image = image.unwrap();
-                        let flipped_image = image::imageops::flip_vertical(&image);
-                        drawing_ctx.update_texture_from_image(flipped_image);
                     }
                 }
                 _ => {}
