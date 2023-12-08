@@ -1,15 +1,14 @@
 extern crate gl;
 extern crate glfw;
 
+mod draw;
 mod opengl;
 
 use std::path::Path;
-use std::rc::Rc;
 
 use glfw::Context;
 
-use opengl::material::textured::*;
-use opengl::material::MockMaterial;
+use draw::DrawingCtx;
 
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
@@ -31,15 +30,7 @@ fn main() {
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
     // Drawing stuff
-    let texture_draw_shader = crate::opengl::shader::create_shader_from_parts(
-        &include_str!("shaders/quad.vert"),
-        &include_str!("shaders/quad.frag"),
-    );
-    texture_draw_shader.set_int("image_texture", 0);
-    let mut texture_draw_material = TexturedMaterial::new(Rc::new(texture_draw_shader), vec![]);
-
-    let quad_mesh =
-        crate::opengl::mesh::factory::create_basic_quad_mesh(Rc::new(MockMaterial), 1.0);
+    let mut drawing_ctx = DrawingCtx::new();
 
     while !window.should_close() {
         unsafe {
@@ -48,10 +39,9 @@ fn main() {
         }
 
         // Draw the quad mesh
-        crate::opengl::texture::set_active_texture_unit(0).unwrap();
-        quad_mesh.draw_with_material(&texture_draw_material, |_| {});
-
+        drawing_ctx.draw();
         window.swap_buffers();
+
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
             match event {
@@ -70,50 +60,7 @@ fn main() {
                         let exists_result = Path::try_exists(&path);
                         if let Ok(exists) = exists_result {
                             if exists {
-                                // If no texture is stored yet, create a new one
-                                let drawn_textures = texture_draw_material.textures_mut();
-                                if drawn_textures.is_empty() {
-                                    let load_result =
-                                        crate::opengl::texture::loading::create_and_load_texture(
-                                            &path,
-                                        );
-
-                                    if load_result.is_err() {
-                                        println!(
-                                            "Failed to load texture: {}",
-                                            load_result.unwrap_err()
-                                        );
-                                        continue;
-                                    }
-
-                                    // If the texture was loaded successfully, store it in the
-                                    // material used for drawing
-                                    let stored_texture = TextureKind::TwoDimensional {
-                                        texture: load_result.unwrap(),
-                                    };
-                                    drawn_textures.push(stored_texture);
-                                } else {
-                                    // Otherwise, load the texture into the already created texture
-                                    let current_texture = &drawn_textures[0];
-                                    if let TextureKind::TwoDimensional { texture } =
-                                        &current_texture
-                                    {
-                                        let load_result =
-                                            crate::opengl::texture::loading::load_texture_into(
-                                                &path, texture,
-                                            );
-
-                                        if load_result.is_err() {
-                                            println!(
-                                                "Failed to load texture: {}",
-                                                load_result.unwrap_err()
-                                            );
-                                            continue;
-                                        }
-                                    }
-                                }
-                            } else {
-                                println!("File doesn't exist: {}", path.display());
+                                drawing_ctx.update_texture(&path);
                             }
                         } else {
                             let err = exists_result.unwrap_err();

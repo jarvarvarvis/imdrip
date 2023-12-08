@@ -45,6 +45,10 @@ impl TexturedMaterial {
         )
     }
 
+    pub fn textures(&self) -> &Vec<TextureKind> {
+        &self.textures
+    }
+
     pub fn textures_mut(&mut self) -> &mut Vec<TextureKind> {
         &mut self.textures
     }
