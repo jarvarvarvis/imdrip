@@ -33,6 +33,29 @@ fn main() {
     let window_size = Vector2::new(width, height);
     let mut drawing_ctx = ImdripCtx::new(window_size);
 
+    // Handle command line args
+    let mut args = std::env::args();
+    if args.len() == 2 {
+        let executable_name = args.next().unwrap();
+        let argument = args.next();
+
+        if let Some(first_argument) = argument {
+            if first_argument == "help" {
+                println!("Usage:");
+                println!("{} help            - Show this help", executable_name);
+                println!(
+                    "{} <file path/url> - Load an image from disk/url",
+                    executable_name
+                );
+                return;
+            }
+
+            let path = std::path::PathBuf::from(&first_argument);
+            drawing_ctx.handle_file_path(&path);
+        }
+    }
+
+    // Main loop
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
