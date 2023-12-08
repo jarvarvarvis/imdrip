@@ -7,6 +7,7 @@ mod opengl;
 use std::path::Path;
 
 use glfw::Context;
+use nalgebra::Vector2;
 
 use draw::DrawingCtx;
 
@@ -30,7 +31,9 @@ fn main() {
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
     // Drawing stuff
-    let mut drawing_ctx = DrawingCtx::new();
+    let (width, height) = window.get_size();
+    let window_size = Vector2::new(width, height);
+    let mut drawing_ctx = DrawingCtx::new(window_size);
 
     while !window.should_close() {
         unsafe {
@@ -46,6 +49,7 @@ fn main() {
         for (_, event) in glfw::flush_messages(&events) {
             match event {
                 glfw::WindowEvent::Size(width, height) => unsafe {
+                    drawing_ctx.on_window_resize(Vector2::new(width, height));
                     gl::Viewport(0, 0, width, height);
                 },
                 glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
