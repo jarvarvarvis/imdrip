@@ -10,8 +10,9 @@ use crate::opengl::texture::texture_2d::Texture2D;
 
 pub struct DrawingCtx {
     material: TexturedMaterial,
-    current_texture_size: Vector2<i32>,
+    current_image_size: Vector2<i32>,
     current_window_size: Vector2<i32>,
+    resize_on_load: bool,
     mesh: Mesh,
 }
 
@@ -28,8 +29,9 @@ impl DrawingCtx {
 
         Self {
             material,
-            current_texture_size: Vector2::new(0, 0),
+            current_image_size: Vector2::new(0, 0),
             current_window_size,
+            resize_on_load: true,
             mesh,
         }
     }
@@ -67,7 +69,7 @@ impl DrawingCtx {
             }
 
             let size = load_result.unwrap();
-            self.current_texture_size = size;
+            self.current_image_size = size;
         }
     }
 
@@ -86,7 +88,7 @@ impl DrawingCtx {
         let textures = self.material.textures_mut();
         textures.push(stored_texture);
 
-        self.current_texture_size = size;
+        self.current_image_size = size;
     }
 
     pub fn on_window_resize(&mut self, window_size: Vector2<i32>) {
@@ -100,5 +102,21 @@ impl DrawingCtx {
         }
 
         self.update_existing_texture(path);
+    }
+
+    pub fn image_size(&self) -> Vector2<i32> {
+        self.current_image_size
+    }
+
+    pub fn set_resize_on_load(&mut self, resize_on_load: bool) {
+        self.resize_on_load = resize_on_load;
+    }
+
+    pub fn toggle_resize_on_load(&mut self) {
+        self.set_resize_on_load(!self.resize_on_load);
+    }
+
+    pub fn resize_on_load(&self) -> bool {
+        self.resize_on_load
     }
 }

@@ -55,16 +55,41 @@ fn main() {
                 glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
                     window.set_should_close(true);
                 }
-                glfw::WindowEvent::FileDrop(paths) => {
-                    println!("Dropped file paths:");
-                    for path in paths.iter() {
-                        println!("{}", path.display());
+                glfw::WindowEvent::Key(glfw::Key::R, _, glfw::Action::Press, _) => {
+                    drawing_ctx.toggle_resize_on_load();
+                    let status = if drawing_ctx.resize_on_load() {
+                        "Enabled"
+                    } else {
+                        "Disabled"
+                    };
+                    println!("{} resize on load", status);
+                }
+                glfw::WindowEvent::Key(glfw::Key::F, _, glfw::Action::Press, _) => {
+                    let size = drawing_ctx.image_size();
+                    if size.x == 0 || size.y == 0 {
+                        println!("Image has width or height of zero (which might break resizing)!");
+                        continue;
+                    }
 
+                    window.set_size(size.x, size.y);
+                    println!("Reized window to {}, {} to fit image", size.x, size.y);
+                }
+                glfw::WindowEvent::FileDrop(paths) => {
+                    for path in paths.iter() {
                         // Read the texture (if it's a file path)
                         let exists_result = Path::try_exists(&path);
                         if let Ok(exists) = exists_result {
-                            if exists {
-                                drawing_ctx.update_texture(&path);
+                            if !exists {
+                                println!("Path to image doesn't exist: {}", path.display());
+                                continue;
+                            }
+
+                            drawing_ctx.update_texture(&path);
+
+                            // Resize (if resize-on-load is enabled)
+                            if drawing_ctx.resize_on_load() {
+                                let size = drawing_ctx.image_size();
+                                window.set_size(size.x, size.y);
                             }
                         } else {
                             let err = exists_result.unwrap_err();
