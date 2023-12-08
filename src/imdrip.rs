@@ -137,7 +137,7 @@ impl ImdripCtx {
         self.load_new_texture_from_image(image);
     }
 
-    pub fn handle_file_path(&mut self, path: &PathBuf) {
+    pub fn handle_file_path(&mut self, path: &PathBuf) -> bool {
         // Read the texture (if it's a file path)
         let exists_result = Path::try_exists(&path);
         let exists = exists_result.map(|exists| exists).unwrap_or(false);
@@ -151,14 +151,14 @@ impl ImdripCtx {
         let downloaded_image = reqwest::blocking::get(path.to_string_lossy().as_ref());
         if let Err(error) = downloaded_image {
             println!("Failed to download image from URL: {}", error);
-            return;
+            return false;
         }
 
         let response = downloaded_image.unwrap();
         let bytes = response.bytes();
         if let Err(error) = bytes {
             println!("Failed to get full response body as bytes: {}", error);
-            return;
+            return false;
         }
 
         let received_bytes = bytes.unwrap();
@@ -167,13 +167,15 @@ impl ImdripCtx {
         let image = image::load_from_memory(&received_bytes);
         if let Err(error) = image {
             println!("Failed to create image from response: {}", error);
-            return;
+            return false;
         }
 
         println!("Done loading image from URL!");
         let image = image.unwrap();
         let flipped_image = image::imageops::flip_vertical(&image);
         self.update_texture_from_image(flipped_image);
+
+        true
     }
 
     pub fn image_size(&self) -> Vector2<i32> {

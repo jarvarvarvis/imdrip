@@ -74,10 +74,10 @@ fn main() {
                 }
                 glfw::WindowEvent::FileDrop(paths) => {
                     for path in paths.iter() {
-                        drawing_ctx.handle_file_path(path);
+                        let successfully_loaded = drawing_ctx.handle_file_path(path);
 
                         // Resize (if resize-on-load is enabled)
-                        if drawing_ctx.resize_on_load() {
+                        if successfully_loaded && drawing_ctx.resize_on_load() {
                             let size = drawing_ctx.image_size();
                             window.set_size(size.x, size.y);
                         }
