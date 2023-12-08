@@ -143,6 +143,7 @@ impl ImdripCtx {
         let exists = exists_result.map(|exists| exists).unwrap_or(false);
         if exists {
             self.update_texture_from_path(&path);
+            return true;
         } else {
             println!("File doesn't exist, trying to download from the internet");
         }
