@@ -6,6 +6,7 @@ pub fn unbind() {
     super::unbind(gl::TEXTURE_2D);
 }
 
+#[derive(Debug)]
 pub struct Texture2D {
     texture: Texture,
 }

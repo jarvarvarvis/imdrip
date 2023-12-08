@@ -44,6 +44,10 @@ impl TexturedMaterial {
             vec![TextureKind::TwoDimensional { texture }],
         )
     }
+
+    pub fn textures_mut(&mut self) -> &mut Vec<TextureKind> {
+        &mut self.textures
+    }
 }
 
 impl Material for TexturedMaterial {

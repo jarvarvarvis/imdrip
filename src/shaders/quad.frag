@@ -4,6 +4,8 @@ in vec2 vertex_tex_coord;
 
 uniform sampler2D image_texture;
 
+out vec4 frag_color;
+
 void main() {
-    gl_FragColor = texture(image_texture, vertex_tex_coord);
+    frag_color = texture(image_texture, vertex_tex_coord);
 }

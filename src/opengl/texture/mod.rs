@@ -20,6 +20,7 @@ pub fn set_active_texture_unit(unit: u32) -> Result<(), String> {
     }
 }
 
+#[derive(Debug)]
 pub struct Texture {
     handle: u32,
     target: gl::types::GLenum,
@@ -144,6 +145,7 @@ impl Texture {
 impl Drop for Texture {
     fn drop(&mut self) {
         unsafe {
+            println!("Deleting texture {}", self.handle);
             gl::DeleteTextures(1, &mut self.handle);
         }
     }
