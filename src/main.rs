@@ -51,7 +51,13 @@ fn main() {
             }
 
             let path = std::path::PathBuf::from(&first_argument);
-            drawing_ctx.handle_file_path(&path);
+            let successfully_loaded = drawing_ctx.handle_file_path(&path);
+
+            // Resize (if resize-on-load is enabled)
+            if successfully_loaded && drawing_ctx.resize_on_load() {
+                let size = drawing_ctx.image_size();
+                window.set_size(size.x, size.y);
+            }
         }
     }
 
