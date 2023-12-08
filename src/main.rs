@@ -78,13 +78,9 @@ fn main() {
                     for path in paths.iter() {
                         // Read the texture (if it's a file path)
                         let exists_result = Path::try_exists(&path);
-                        if let Ok(exists) = exists_result {
-                            if !exists {
-                                println!("Path to image doesn't exist: {}", path.display());
-                                continue;
-                            }
-
-                            drawing_ctx.update_texture(&path);
+                        let exists = exists_result.map(|exists| exists).unwrap_or(false);
+                        if exists {
+                            drawing_ctx.update_texture_from_path(&path);
 
                             // Resize (if resize-on-load is enabled)
                             if drawing_ctx.resize_on_load() {
@@ -92,9 +88,37 @@ fn main() {
                                 window.set_size(size.x, size.y);
                             }
                         } else {
-                            let err = exists_result.unwrap_err();
-                            println!("Failed to check if path exists: {}", err);
+                            println!("File doesn't exist, trying to download from the internet");
                         }
+
+                        // Download the texture from a URL (if it is one) and update the drawing ctx
+                        let downloaded_image =
+                            reqwest::blocking::get(path.to_string_lossy().as_ref());
+                        if let Err(error) = downloaded_image {
+                            println!("Failed to download image from URL: {}", error);
+                            continue;
+                        }
+
+                        let response = downloaded_image.unwrap();
+                        let bytes = response.bytes();
+                        if let Err(error) = bytes {
+                            println!("Failed to get full response body as bytes: {}", error);
+                            continue;
+                        }
+
+                        let received_bytes = bytes.unwrap();
+                        println!("Received {} bytes", received_bytes.len());
+
+                        let image = image::load_from_memory(&received_bytes);
+                        if let Err(error) = image {
+                            println!("Failed to create image from response: {}", error);
+                            continue;
+                        }
+
+                        println!("Done loading image from URL!");
+                        let image = image.unwrap();
+                        let flipped_image = image::imageops::flip_vertical(&image);
+                        drawing_ctx.update_texture_from_image(flipped_image);
                     }
                 }
                 _ => {}

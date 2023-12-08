@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use image::RgbaImage;
 use nalgebra::Vector2;
 
 use crate::opengl::material::textured::{TextureKind, TexturedMaterial};
@@ -58,10 +59,14 @@ impl DrawingCtx {
         }
     }
 
-    fn load_new_texture<P: AsRef<Path>>(&mut self, path: P) {
+    pub fn on_window_resize(&mut self, window_size: Vector2<i32>) {
+        self.current_window_size = window_size;
+    }
+
+    fn update_existing_texture_from_path<P: AsRef<Path>>(&mut self, path: P) {
         if let Some(tex) = self.get_texture() {
             let load_result =
-                crate::opengl::texture::loading::load_texture_into(&path, tex.as_ref());
+                crate::opengl::texture::loading::load_into_texture_from_path(&path, tex.as_ref());
 
             if load_result.is_err() {
                 println!("Failed to load texture: {}", load_result.unwrap_err());
@@ -73,8 +78,8 @@ impl DrawingCtx {
         }
     }
 
-    fn update_existing_texture<P: AsRef<Path>>(&mut self, path: P) {
-        let load_result = crate::opengl::texture::loading::create_and_load_texture(&path);
+    fn load_new_texture_from_path<P: AsRef<Path>>(&mut self, path: P) {
+        let load_result = crate::opengl::texture::loading::create_and_load_texture_from_path(&path);
         if load_result.is_err() {
             println!("Failed to load texture: {}", load_result.unwrap_err());
             return;
@@ -91,17 +96,45 @@ impl DrawingCtx {
         self.current_image_size = size;
     }
 
-    pub fn on_window_resize(&mut self, window_size: Vector2<i32>) {
-        self.current_window_size = window_size;
-    }
-
-    pub fn update_texture<P: AsRef<Path>>(&mut self, path: P) {
+    pub fn update_texture_from_path<P: AsRef<Path>>(&mut self, path: P) {
         if self.has_textures() {
-            self.load_new_texture(path);
+            self.update_existing_texture_from_path(path);
             return;
         }
 
-        self.update_existing_texture(path);
+        self.load_new_texture_from_path(path);
+    }
+
+    fn update_existing_texture_from_image(&mut self, image: RgbaImage) {
+        if let Some(tex) = self.get_texture() {
+            let size =
+                crate::opengl::texture::loading::load_from_image_into_texture(image, tex.as_ref());
+
+            self.current_image_size = size;
+        }
+    }
+
+    fn load_new_texture_from_image(&mut self, image: RgbaImage) {
+        let image = crate::opengl::texture::loading::create_from_image(image);
+
+        // If the texture was loaded successfully, store it in the
+        // material used for drawing
+        let (texture, size) = image;
+        let stored_texture = TextureKind::TwoDimensional { texture };
+
+        let textures = self.material.textures_mut();
+        textures.push(stored_texture);
+
+        self.current_image_size = size;
+    }
+
+    pub fn update_texture_from_image(&mut self, image: RgbaImage) {
+        if self.has_textures() {
+            self.update_existing_texture_from_image(image);
+            return;
+        }
+
+        self.load_new_texture_from_image(image);
     }
 
     pub fn image_size(&self) -> Vector2<i32> {
