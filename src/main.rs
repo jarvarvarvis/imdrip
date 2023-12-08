@@ -1,13 +1,13 @@
 extern crate gl;
 extern crate glfw;
 
-mod draw;
+mod imdrip;
 mod opengl;
 
 use glfw::Context;
 use nalgebra::Vector2;
 
-use draw::DrawingCtx;
+use imdrip::ImdripCtx;
 
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
@@ -31,7 +31,7 @@ fn main() {
     // Drawing stuff
     let (width, height) = window.get_size();
     let window_size = Vector2::new(width, height);
-    let mut drawing_ctx = DrawingCtx::new(window_size);
+    let mut drawing_ctx = ImdripCtx::new(window_size);
 
     while !window.should_close() {
         unsafe {

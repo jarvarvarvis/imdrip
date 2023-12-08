@@ -9,7 +9,7 @@ use crate::opengl::material::{Material, MockMaterial};
 use crate::opengl::mesh::Mesh;
 use crate::opengl::texture::texture_2d::Texture2D;
 
-pub struct DrawingCtx {
+pub struct ImdripCtx {
     material: TexturedMaterial,
     current_image_size: Vector2<i32>,
     current_window_size: Vector2<i32>,
@@ -17,7 +17,7 @@ pub struct DrawingCtx {
     mesh: Mesh,
 }
 
-impl DrawingCtx {
+impl ImdripCtx {
     pub fn new(current_window_size: Vector2<i32>) -> Self {
         let texture_draw_shader = crate::opengl::shader::create_shader_from_parts(
             &include_str!("shaders/quad.vert"),
