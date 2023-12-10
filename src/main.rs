@@ -115,5 +115,14 @@ fn main() {
                 _ => {}
             }
         }
+
+        // Set window title
+        let resize_on_load_status = if drawing_ctx.resize_on_load() {
+            "Enabled"
+        } else {
+            "Disabled"
+        };
+
+        window.set_title(&format!("imdrip - Resize on load? {}", resize_on_load_status));
     }
 }
